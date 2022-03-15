@@ -46,5 +46,7 @@ This NSX ALB Cloud Migrator supports the below migration scenarios for Virtual S
 7. Set the bash script run.sh to execute -> *chmod +x run.sh*
 8. Execute run.sh -> *./run.sh* This will launch NSX ALB Cloud Migrator. Follow instructions on the screen.
 
+# Contact
+Please contact me at https://vxplanet.com for improvising the code, feature enhancements and bugs. Alternatively you can also use Issue Tracker to report any bugs or questions regarding ALB Cloud Migrator tool. 
 
 ![VxPlanet.com](https://serveritpro.files.wordpress.com/2021/09/vxplanet_correct.png)
