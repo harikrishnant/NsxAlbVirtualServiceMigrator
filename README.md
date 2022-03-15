@@ -43,9 +43,9 @@ This NSX ALB Cloud Migrator supports the below migration scenarios for Virtual S
      - requests -> *python3 -m pip install requests*
      - urllib3 -> *python3 -m pip install urllib3* 
      - tabulate -> *python3 -m pip install tabulate*
-7. Clone the repository and navigate to NsxAlbCloudMigrator -> *git clone && cd NsxAlbCloudMigrator*
-8. Set the bash script run.sh to execute -> *chmod +x run.sh*
-9. Execute run.sh -> *./run.sh* This will launch NSX ALB Cloud Migrator. Follow instructions on the screen.
+7. Clone the repository and navigate to NsxAlbCloudMigrator -> *git clone https://github.com/harikrishnant/NsxAlbCloudMigrator.git && cd NsxAlbCloudMigrator*
+8. Set the bash script migrator.sh to execute -> *chmod +x migrator.sh*
+9. Execute migrator.sh -> *./migrator.sh* This will launch NSX ALB Cloud Migrator. Follow instructions on the screen.
 
 # Contact
 Please contact me at https://vxplanet.com for improvising the code, feature enhancements and bugs. Alternatively you can also use Issue Tracker to report any bugs or questions regarding the NSX ALB Cloud Migrator tool. 
