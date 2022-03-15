@@ -1,5 +1,10 @@
 # NSX ALB Cloud Migrator
-NSX ALB Cloud Migrator will migrate Virtual Services (and it's dependencies - pools, poolgroups, HTTPPolicySets and VSVIPs) across NSX ALB Cloud Accounts, VRFs, Service Engine Groups and NSX-T T1 gateways. This is currently in version 1.0 and the capabilities & limitations are available in the release notes.
+NSX ALB Cloud Migrator will migrate Virtual Services (and it's dependencies - pools, poolgroups, HTTPPolicySets and VSVIPs) across NSX ALB Cloud Accounts, VRFs, Service Engine Groups and NSX-T T1 gateways. Currently the below cloud accounts are supported:
+- vCenter Cloud
+- NSX-T VLAN cloud
+- NSX-T Overlay cloud
+- No-Orchestrator cloud
+This migrator tool is currently in version 1.0 and the capabilities & limitations are available in the release notes.
 # Overview
 This NSX ALB Cloud Migrator supports the below migration scenarios for Virtual Services and dependencies within the same NSX ALB Tenant:
 
@@ -29,14 +34,17 @@ This NSX ALB Cloud Migrator supports the below migration scenarios for Virtual S
 4. Migration from one Service Engine Group to another in NSX-T Overlay Cloud accounts
 
 # Instructions
-1.  Install Python3. On CentOS or RHEL systems, run -> *yum install -y python3*
-2.  Install the below python modules:
+1. Make sure that the target cloud account to which the Virtual Services need to be migrated is configured. This includes the connector configuration, VRF Contexts, networks & routing configuration and service engine confguration under the Service Engine Group.
+2. The necessary routes (default routes / static routes to the pool members) need to b avaialble on the target VRF context before migrating the VS / Pools. 
+3. A linux VM with connectivity to NSX ALB controllers
+4.  Install Python3 on the linux VM. On CentOS or RHEL systems, run -> *yum install -y python3*
+5.  Install the below python modules:
      - requests -> *python3 -m pip install requests*
      - urllib3 -> *python3 -m pip install urllib3* 
      - tabulate -> *python3 -m pip install tabulate*
-3. Clone the repo and navigate to NsxAlbCloudMigrator -> *git clone && cd NsxAlbCloudMigrator*
-4. Set the bash script run.sh to execute -> *chmod +x run.sh*
-5. Execute run.sh -> *./run.sh* This will launch NSX ALB Cloud Migrator. Follow instructions on the screen.
+6. Clone the repo and navigate to NsxAlbCloudMigrator -> *git clone && cd NsxAlbCloudMigrator*
+7. Set the bash script run.sh to execute -> *chmod +x run.sh*
+8. Execute run.sh -> *./run.sh* This will launch NSX ALB Cloud Migrator. Follow instructions on the screen.
 
 
 ![VxPlanet.com](https://serveritpro.files.wordpress.com/2021/09/vxplanet_correct.png)
