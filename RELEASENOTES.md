@@ -48,7 +48,6 @@ The below NSX ALB features are not yet tested with NSX ALB Cloud Migrator and he
 - IPAM / DNS profiles
 - For NSX-T VLAN backed clouds, the placement networks for each virtual service need to be manually added. This is a NSX ALB Cloud limitation
 - Migration from NSX-T Overlay Cloud to vCenter Cloud succeeds but requires additional manual intervention for VIP connectivity.
-- Wrong inputs to the tool will abort the execution and requires manual cleanup
-- Lack of enhanced logging
+- This NSX ALB Cloud Migrator supports the below migration scenarios for Virtual Services and dependencies within the same NSX ALB Tenant
 
 ![VxPlanet.com](https://serveritpro.files.wordpress.com/2021/09/vxplanet_correct.png)
