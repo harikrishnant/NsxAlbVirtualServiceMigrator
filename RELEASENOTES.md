@@ -50,3 +50,5 @@ The below NSX ALB features are not yet tested with NSX ALB Cloud Migrator and he
 - Migration from NSX-T Overlay Cloud to vCenter Cloud succeeds but requires additional manual intervention for VIP connectivity.
 - Wrong inputs to the tool will abort the execution and requires manual cleanup
 - Lack of enhanced logging
+
+![VxPlanet.com](https://serveritpro.files.wordpress.com/2021/09/vxplanet_correct.png)
