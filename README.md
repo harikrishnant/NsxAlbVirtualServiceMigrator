@@ -38,13 +38,14 @@ This NSX ALB Cloud Migrator supports the below migration scenarios for Virtual S
 2. The necessary routes (default routes / static routes to the pool members) need to b avaialble on the target VRF context before migrating the VS / Pools. 
 3. A linux VM with connectivity to NSX ALB controllers
 4.  Install Python3 on the linux VM. On CentOS or RHEL systems, run -> *yum install -y python3*
-5.  Install the below python modules:
+5.  Install git -> *yum install -y git*
+6.  Install the below python modules:
      - requests -> *python3 -m pip install requests*
      - urllib3 -> *python3 -m pip install urllib3* 
      - tabulate -> *python3 -m pip install tabulate*
-6. Clone the repo and navigate to NsxAlbCloudMigrator -> *git clone && cd NsxAlbCloudMigrator*
-7. Set the bash script run.sh to execute -> *chmod +x run.sh*
-8. Execute run.sh -> *./run.sh* This will launch NSX ALB Cloud Migrator. Follow instructions on the screen.
+7. Clone the repository and navigate to NsxAlbCloudMigrator -> *git clone && cd NsxAlbCloudMigrator*
+8. Set the bash script run.sh to execute -> *chmod +x run.sh*
+9. Execute run.sh -> *./run.sh* This will launch NSX ALB Cloud Migrator. Follow instructions on the screen.
 
 # Contact
 Please contact me at https://vxplanet.com for improvising the code, feature enhancements and bugs. Alternatively you can also use Issue Tracker to report any bugs or questions regarding the NSX ALB Cloud Migrator tool. 
