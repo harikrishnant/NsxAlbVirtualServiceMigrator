@@ -5,7 +5,7 @@ NSX ALB Cloud Migrator will migrate Virtual Services (and it's dependencies - po
 - NSX-T Overlay cloud
 - No-Orchestrator cloud
 
-This migrator tool is currently in version 1.0 and the capabilities & limitations are available in the release notes.
+This NSX ALB Cloud Migrator is currently in version 1.0 and the capabilities & limitations are available in the release notes.
 # Overview
 This NSX ALB Cloud Migrator supports the below migration scenarios for Virtual Services and dependencies within the same NSX ALB Tenant:
 
