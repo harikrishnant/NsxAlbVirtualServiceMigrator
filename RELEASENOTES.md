@@ -40,6 +40,7 @@ NSX ALB API Versions 18.1.2 till 21.1.2
 **Known Limitations**
 
 The below NSX ALB features are not yet tested with NSX ALB Cloud Migrator and hence migration of below features may or may not work as expected.
+- NSX ALB Controllers with SAML / LDAP configured. Currently only local accounts are supported
 - Virtual Services with VIP sharing
 - TLS SNI based Virtual Service Hosting (Parent - Child VS)
 - GSLB DNS Virtual Services
