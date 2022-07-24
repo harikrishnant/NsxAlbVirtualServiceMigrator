@@ -34,7 +34,7 @@ This NSX ALB Cloud Migrator supports the below migration scenarios for Virtual S
 3. Migration from one Service Engine Group to another in NSX-T VLAN Cloud accounts
 4. Migration from one Service Engine Group to another in NSX-T Overlay Cloud accounts
 
-**Note:** This NSX ALB Cloud Migrator supports only migration within the same NSX ALB Tenant. Cross Tenant migration is currently not supported
+**Note:** This NSX ALB Cloud Migrator supports only migration within the same NSX ALB Tenant. Cross Tenant migration is currently not supported.
 
 # Instructions
 1. Make sure that the target cloud account to which the Virtual Services need to be migrated is configured. This includes the connector configuration, VRF Contexts, networks & routing configuration and service engine confguration under the Service Engine Group.
