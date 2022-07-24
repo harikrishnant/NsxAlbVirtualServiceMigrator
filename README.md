@@ -50,6 +50,7 @@ This NSX ALB Cloud Migrator supports the below migration scenarios for Virtual S
      - pandas -> *python3 -m pip install pandas*
 8. Clone the repository and navigate to NsxAlbCloudMigrator/V1.1/ -> *git clone https://github.com/harikrishnant/NsxAlbCloudMigrator.git && cd NsxAlbCloudMigrator/V1.1/*
 9. The migration workflow will create a tracking directory (NsxAlbCloudMigrator/V1.1/Tracker/) which has the tracking information for each job. DO NOT DELETE this directory, as this is required for cleanup and remove_prefix jobs.
+10. Logs for each job is save in NsxAlbCloudMigrator/V1.1/logs/
 
 **Migration mode**
 
