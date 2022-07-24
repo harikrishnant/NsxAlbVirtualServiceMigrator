@@ -2,17 +2,24 @@
 from urllib import response
 import requests
 import sys
+import pandas
 from tabulate import tabulate
 
 #Class for the Virtual Service Object
 class NsxAlbVirtualService:
-    def __init__(self, url, headers, dict_cloud_url_name, dict_pool_url_name, dict_poolgroup_url_name, dict_vsvip_url_name):
+    def __init__(self, url, headers, **kwargs):
         self._url = url + "/api/virtualservice"
         self._headers = headers
-        self._dict_cloud_url_name = dict_cloud_url_name
-        self._dict_pool_url_name = dict_pool_url_name
-        self._dict_poolgroup_url_name = dict_poolgroup_url_name
-        self._dict_vsvip_url_name = dict_vsvip_url_name
+        self._dict_cloud_url_name = kwargs.get("dict_cloud_url_name", {})
+        self._dict_pool_url_name = kwargs.get("dict_pool_url_name", {})
+        self._dict_poolgroup_url_name = kwargs.get("dict_poolgroup_url_name", {})
+        self._dict_vsvip_url_name = kwargs.get("dict_vsvip_url_name", {})
+        self._run_id = kwargs.get("run_id", "")
+
+    def print_func(self, item):
+        print(item)                
+        with open(f"./logs/run-{self._run_id}.log", "a", encoding="utf-8") as outfile:
+            print(item, file=outfile)
 
     #Class Method to get the list of all Virtual Services and to handle API Pagination
     def get_virtualservice(self):
@@ -53,9 +60,9 @@ class NsxAlbVirtualService:
             page += 1
         
         if (len(self._list_virtualservices) == 0) and (response == False): #Handle a scenario where there are no virtual services in NSX ALB tenant
-            print(f"\nList NSX ALB Virtual Services Unsuccessful ({response.status_code})\n")
+            self.print_func(f"\nList NSX ALB Virtual Services Unsuccessful ({response.status_code})\n")
             #Print the error details in table using tabulate function
-            print(tabulate(list(map(list, response.json().items())), headers=["Error", "Details"], showindex=True, tablefmt="fancy_grid"))
+            self.print_func(tabulate(list(map(list, response.json().items())), headers=["Error", "Details"], showindex=True, tablefmt="fancy_grid"))
             sys.exit()
         
         '''Staging area for reorganizing the objects to display'''
@@ -63,9 +70,9 @@ class NsxAlbVirtualService:
             for vs2 in self._dict_vs_originalpoolname:
                 if vs1 == vs2:
                     self._list_vs_poolname_cloudname.append([vs1, self._dict_vs_originalpoolname[vs2], self._dict_vs_cloudname[vs1]])
-        print(f"\n\nDiscovered {len(self._list_virtualservices)} Virtual Services in Tenant '{self._headers['X-Avi-Tenant']}'. Virtual Services, their Pools/Pool_Groups and Cloud details are as below:\n")
         if len(self._list_vs_poolname_cloudname) != 0:
-            print(tabulate(self._list_vs_poolname_cloudname, headers=["Virtual Service", "Pool / Pool_Group", "Cloud"], showindex=True, tablefmt="fancy_grid"))
+            self.print_func(f"\n\nDiscovered {len(self._list_virtualservices)} Virtual Services in Tenant '{self._headers['X-Avi-Tenant']}'. Virtual Services, their Pools/Pool_Groups and Cloud details are as below:\n")
+            self.print_func(tabulate(self._list_vs_poolname_cloudname, headers=["Virtual Service", "Pool / Pool_Group", "Cloud"], showindex=True, tablefmt="fancy_grid"))
 
     def set_virtualservice(self):
         ''' Method to select the list of virtual services to be migrated and create a dictionary of virtual service and original pool mapping '''
@@ -92,13 +99,13 @@ class NsxAlbVirtualService:
                 self._dict_vs_typo_errors[vs_selected] = "VS not found. It's a possible typo, make sure the name is entered correctly"
         
         if len(self._dict_vs_typo_errors) != 0:
-            print(f"\nThe below Virtual Services you entered were not found and will be skipped\n")
-            print(tabulate(list(map(list, self._dict_vs_typo_errors.items())), headers=["Virtual Service", "Error_Details"], showindex=True, tablefmt="fancy_grid"))
+            self.print_func(f"\nThe below Virtual Services you entered were not found and will be skipped\n")
+            self.print_func(tabulate(list(map(list, self._dict_vs_typo_errors.items())), headers=["Virtual Service", "Error_Details"], showindex=True, tablefmt="fancy_grid"))
         if len(self.dict_selectedvs_originalpoolname) != 0:
-            print(f"\nThe below Virtual Services are selected for migration and their pool/pool_group association is as below. They will now be scanned for any HTTP Policy Sets\n")
-            print(tabulate(list(map(list, self.dict_selectedvs_originalpoolname.items())), headers=["Virtual Service", "Pool / Pool_Group"], showindex=True, tablefmt="fancy_grid"))
+            self.print_func(f"\nThe below Virtual Services are selected for migration and their pool/pool_group association is as below. They will now be scanned for any HTTP Policy Sets\n")
+            self.print_func(tabulate(list(map(list, self.dict_selectedvs_originalpoolname.items())), headers=["Virtual Service", "Pool / Pool_Group"], showindex=True, tablefmt="fancy_grid"))
         else:
-            print("\nNo Virtual Services selected, Exiting..\n")
+            self.print_func("\nNo Virtual Services selected, Exiting..\n")
             sys.exit()
 
     def get_virtualservice_policy(self, dict_httppolicyset_url_name):
@@ -115,25 +122,25 @@ class NsxAlbVirtualService:
                     else:
                         self._dict_vs_httppolicyset_none[vs["name"]] = "POLICY_NONE"
         if len(self.dict_vs_httppolicysetname) != 0:
-            print(f"\nThe selected Virtual Services for migration has the below HTTP Policy Sets defined. They will now be scanned for any Content switching Pools / PoolGroups\n")
-            print(tabulate(list(map(list, self.dict_vs_httppolicysetname.items())), headers=["Virtual Service", "HTTPPolicySet_Name"], showindex=True, tablefmt="fancy_grid"))
+            self.print_func(f"\nThe selected Virtual Services for migration has the below HTTP Policy Sets defined. They will now be scanned for any Content switching Pools / PoolGroups\n")
+            self.print_func(tabulate(list(map(list, self.dict_vs_httppolicysetname.items())), headers=["Virtual Service", "HTTPPolicySet_Name"], showindex=True, tablefmt="fancy_grid"))
         else:
-            print(f"\nThe selected Virtual Services for migration has no HTTP Policy Sets defined\n")
-            print(tabulate(list(map(list, self._dict_vs_httppolicyset_none.items())), headers=["Virtual Service", "HTTPPolicySet_Name"], showindex=True, tablefmt="fancy_grid"))
+            self.print_func(f"\nThe selected Virtual Services for migration has no HTTP Policy Sets defined\n")
+            self.print_func(tabulate(list(map(list, self._dict_vs_httppolicyset_none.items())), headers=["Virtual Service", "HTTPPolicySet_Name"], showindex=True, tablefmt="fancy_grid"))
 
     def create_virtualservice(self, body):
         ''' Class Method to create NSX ALB VS in the Tenant on the selected Cloud Account'''
         response = requests.post(self._url, json=body, headers=self._headers, verify=False)
         if response:
-            print(f"\nVirtual Service '{response.json()['name']}' successfully created ({response.status_code})\n")
+            self.print_func(f"\nVirtual Service '{response.json()['name']}' successfully created ({response.status_code})\n")
         else:
-            print(f"\nVirtual Service '{body['name']}' creation Failed ({response.status_code})\n")
-            print(tabulate(list(map(list, response.json().items())), headers=["Error", "Details"], showindex=True, tablefmt="fancy_grid"))
-            print("\nExiting, Please cleanup any objects that are created, fix the error and re-run the migrator \n")
+            self.print_func(f"\nVirtual Service '{body['name']}' creation Failed ({response.status_code})\n")
+            self.print_func(tabulate(list(map(list, response.json().items())), headers=["Error", "Details"], showindex=True, tablefmt="fancy_grid"))
+            self.print_func("\nExiting, Please cleanup any objects that are created, fix the error and re-run the migrator \n")
             sys.exit()
         return response.json()
 
-    def migrate_virtualservice(self, dict_originalpoolurl_migratedpoolurl, dict_originalpoolgroupurl_migratedpoolgroupurl, dict_vs_migratedhttppolicyseturl, dict_originalvsvipurl_migratedvsvipurl, target_cloud_url, target_vrfcontext_url, target_segroup_url, suffix_tag):
+    def migrate_virtualservice(self, dict_originalpoolurl_migratedpoolurl, dict_originalpoolgroupurl_migratedpoolgroupurl, dict_vs_migratedhttppolicyseturl, dict_originalvsvipurl_migratedvsvipurl, target_cloud_url, target_vrfcontext_url, target_segroup_url, prefix_tag, tracker_csv):
         '''Class method to migrate Virtual Services to the selected target cloud account'''
         self._dict_migratedvs_name_url = {}
         for selected_vs, originalpool_name in list(self.dict_selectedvs_originalpoolname.items()):
@@ -172,13 +179,70 @@ class NsxAlbVirtualService:
                             vs["vsvip_ref"] = migratedvsvip
                     vs["enabled"] = "false"
                     vs["traffic_enabled"] = "false"
-                    vs["name"] = vs["name"] + "-" + suffix_tag
+                    vs["name"] = prefix_tag + "-" + vs["name"]
                     vs["cloud_ref"] = target_cloud_url
                     vs["se_group_ref"] = target_segroup_url
                     vs["vrf_context_ref"] = target_vrfcontext_url
                     migrated_vs = self.create_virtualservice(vs)
                     migrated_vs_url = self._url + "/" + migrated_vs["uuid"]
+                    #Adding to tracker
+                    dict_migrated_vs = {
+                                "obj_type" : ["virtualservice"],
+                                "obj_name" : [migrated_vs["name"]],
+                                "uuid" : [migrated_vs["uuid"]],
+                                "url" : [migrated_vs_url]
+                            }
+                    df_migrated_vs = pandas.DataFrame(dict_migrated_vs)
+                    df_migrated_vs.to_csv(tracker_csv, mode='a', index=False, header=False)
                     self._dict_migratedvs_name_url[migrated_vs["name"]] = migrated_vs_url
-        print(f"\nThe below Virtual Services are migrated successfully\n")
-        print(tabulate(list(map(list,self._dict_migratedvs_name_url.items())), headers=["Migrated_VS_name", "Migrated_VS_Ref"], showindex=True, tablefmt="fancy_grid"))
-                    
+        self.print_func(f"\nThe below Virtual Services are migrated successfully\n")
+        self.print_func(tabulate(list(map(list,self._dict_migratedvs_name_url.items())), headers=["Migrated_VS_name", "Migrated_VS_Ref"], showindex=True, tablefmt="fancy_grid"))
+    
+    def slice_virtualservice_name(self, virtualservice_name):
+        start_index = virtualservice_name.find(self._run_id) + len(self._run_id) + 1
+        return virtualservice_name[start_index:]
+        
+    def remove_virtualservice_prefix(self, obj_tracker, headers):
+        ''' Class Method to remove the prefixes of NSX ALB virtualservices '''
+        self.get_virtualservice() #get_virtualservice methos is a pre-requisite for calling migrate_virtualservice method
+        df_obj_track_csv = pandas.read_csv(obj_tracker + "/obj_track-" + self._run_id + ".csv")
+        for index, row in df_obj_track_csv.iterrows():
+            if row["obj_type"] == "virtualservice":
+                for virtualservice in self._list_virtualservices:
+                    if virtualservice["url"] == row["url"]:
+                        if virtualservice["name"][:len(self._run_id)] == self._run_id:
+                            virtualservice["name"] = self.slice_virtualservice_name(virtualservice["name"])
+                            response = requests.put(virtualservice["url"], json=virtualservice, headers=headers, verify=False )
+                            if response:
+                                print(f"\nvirtualservice Prefix for {self._run_id + '-' + response.json()['name']} removed successfully ({response.status_code}). New Object name is '{response.json()['name']}'\n")
+                                dict_df_obj_remove_prefix_status = {
+                                    "obj_type" : ["virtualservice"],
+                                    "obj_name_old" : [row["obj_name"]],
+                                    "obj_name_new" : [response.json()['name']],
+                                    "PREFIX_REMOVAL_STATUS" : ["SUCCESS"],
+                                    "Error" : [""]
+                                }  
+                                df_obj_remove_prefix_status = pandas.DataFrame(dict_df_obj_remove_prefix_status)
+                                df_obj_remove_prefix_status.to_csv(obj_tracker + "/obj_prefix_removal_status_" + self._run_id + ".csv", index=False, mode='a', header=False)
+                            else:
+                                print(f"\nvirtualservice Prefix removal failed for {self._run_id + '-' + virtualservice['name']} - ({response.status_code})\n")
+                                dict_df_obj_remove_prefix_status = {
+                                    "obj_type" : ["virtualservice"],
+                                    "obj_name_old" : [row["obj_name"]],
+                                    "obj_name_new" : [row["obj_name"]],
+                                    "PREFIX_REMOVAL_STATUS" : ["FAILURE"],
+                                    "Error" : [response.json()]
+                                }  
+                                df_obj_remove_prefix_status = pandas.DataFrame(dict_df_obj_remove_prefix_status)
+                                df_obj_remove_prefix_status.to_csv(obj_tracker + "/obj_prefix_removal_status_" + self._run_id + ".csv", index=False, mode='a', header=False)
+                        else:
+                            print(f"\nPrefix tag missing in {virtualservice['name']}, hence not renamed")
+                            dict_df_obj_remove_prefix_status = {
+                                    "obj_type" : ["virtualservice"],
+                                    "obj_name_old" : [row["obj_name"]],
+                                    "obj_name_new" : [virtualservice["name"]],
+                                    "PREFIX_REMOVAL_STATUS" : ["FAILURE"],
+                                    "Error" : [f"Prefix tag missing in {virtualservice['name']}"]
+                                }  
+                            df_obj_remove_prefix_status = pandas.DataFrame(dict_df_obj_remove_prefix_status)
+                            df_obj_remove_prefix_status.to_csv(obj_tracker + "/obj_prefix_removal_status_" + self._run_id + ".csv", index=False, mode='a', header=False)                
