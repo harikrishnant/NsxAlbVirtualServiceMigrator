@@ -4,9 +4,15 @@ import sys
 from tabulate import tabulate
 
 class NsxAlbCloud:
-    def __init__(self, url, headers):
+    def __init__(self, url, headers, run_id):
         self._url = url + "/api/cloud"
         self._headers = headers
+        self._run_id = run_id
+
+    def print_func(self, item):
+        print(item)                
+        with open(f"./logs/run-{self._run_id}.log", "a", encoding="utf-8") as outfile:
+            print(item, file=outfile)
 
     def get_cloud(self): 
         ''' Class Method to get the list of all Cloud Accounts and to handle API Pagination '''
@@ -24,27 +30,27 @@ class NsxAlbCloud:
                     self.dict_cloud_url_name[cloud["url"]] = cloud["name"]
             page += 1
         if len(self._list_clouds) != 0:
-            print(f"\nFound {len(self._list_clouds)} NSX ALB Cloud Accounts under the Tenant - {self._headers['X-Avi-Tenant']}")
-            print(f"\nCloud details below:\n")
-            print(tabulate(list(map(list, self.dict_cloud_url_name.items())), headers=["Cloud_Ref", "Name"], showindex=True, tablefmt="fancy_grid"))
+            self.print_func(f"\nFound {len(self._list_clouds)} NSX ALB Cloud Accounts under the Tenant - {self._headers['X-Avi-Tenant']}")
+            self.print_func(f"\nCloud details below:\n")
+            self.print_func(tabulate(list(map(list, self.dict_cloud_url_name.items())), headers=["Cloud_Ref", "Name"], showindex=True, tablefmt="fancy_grid"))
         else:
-            print(f"\nList NSX ALB Cloud Accounts Unsuccessful ({response.status_code})\n")
+            self.print_func(f"\nList NSX ALB Cloud Accounts Unsuccessful ({response.status_code})\n")
             #Print the error details in table using tabulate function
-            print(tabulate(list(map(list, response.json().items())), headers=["Error", "Details"], showindex=True, tablefmt="fancy_grid"))
+            self.print_func(tabulate(list(map(list, response.json().items())), headers=["Error", "Details"], showindex=True, tablefmt="fancy_grid"))
             sys.exit()
  
-    def set_cloud(self):
+    def set_cloud(self, target_cloud_name):
         ''' Class Method to set the destination cloud account to migrate virtual services to '''
         self.get_cloud() #get_cloud() method is a pre-requisite to run the set_cloud() method
-        self.target_cloud_name = input(f"\nEnter the Destination NSX ALB Cloud Account to migrate applications to (Enter Name without quotes) - ")
+        self.target_cloud_name = target_cloud_name
         self.target_cloud_url = "" # Use this Cloud URL to migrate to #
         if self.target_cloud_name in list(self.dict_cloud_url_name.values()):    
             for url,name in self.dict_cloud_url_name.items():
                 if name == self.target_cloud_name:
                     self.target_cloud_url = url
         else:
-            print("\n")
-            print(tabulate([[f"Cloud Account '{self.target_cloud_name}' not found", "Please select the correct cloud account from the table above"]], ["Error", "Details"], showindex=True, tablefmt="fancy_grid"))
+            self.print_func("\n")
+            self.print_func(tabulate([[f"Cloud Account '{self.target_cloud_name}' not found", "Please select the correct cloud account from the table above"]], ["Error", "Details"], showindex=True, tablefmt="fancy_grid"))
             sys.exit()
-        print(f"\nYou selected '{self.target_cloud_name}' Cloud Account\n")
-        print(tabulate([[self.target_cloud_name, self.target_cloud_url]], ["Name", "Cloud_Ref"], showindex=True, tablefmt="fancy_grid"))
+        self.print_func(f"\nYou selected '{self.target_cloud_name}' Cloud Account\n")
+        self.print_func(tabulate([[self.target_cloud_name, self.target_cloud_url]], ["Name", "Cloud_Ref"], showindex=True, tablefmt="fancy_grid"))
