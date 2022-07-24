@@ -8,6 +8,7 @@ This release notes cover the following topics:
 **Document Revision History**
 
 First Edition - March 03, 2022
+
 Second Edition - July 24, 2022
 
 **Supported NSX ALB Versions**
@@ -16,7 +17,7 @@ NSX ALB API Versions 18.1.2 till 21.1.4
 
 **Whats's New**
 - Added support till NSX ALB version 21.1.4
-- Completely written using Classes and Objects (Object oriented)
+- Completely written using Python Classes and Objects (Object oriented)
 - Completely switched the script execution mode from interactive to parameter based. Tool supports three execution modes: a) Migration b) Cleanup and c) remove_prefix
 - Added object tracking class which tracks each object created as part of the migration workflow
 - Added automated cleanup of objects created by the migrator. Useful to revert in case of a failed migration
