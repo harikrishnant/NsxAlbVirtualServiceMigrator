@@ -1,13 +1,13 @@
-# NSX ALB Cloud Migrator
-NSX ALB Cloud Migrator will migrate Virtual Services (and it's dependencies - pools, poolgroups, HTTPPolicySets and VSVIPs) across NSX ALB Cloud Accounts, VRFs, Service Engine Groups and NSX-T T1 gateways. Currently the below NSX ALB cloud accounts are supported:
+# NSX ALB Virtual Service Migrator v1.2
+NSX ALB Virtual Service Migrator will migrate Virtual Services (and it's dependencies - pools, poolgroups, HTTPPolicySets and VSVIPs) across NSX ALB Cloud Accounts, VRFs, Service Engine Groups and NSX-T T1 gateways. Currently the below NSX ALB cloud accounts are supported:
 - vCenter Cloud
 - NSX-T VLAN cloud
 - NSX-T Overlay cloud
 - No-Orchestrator cloud
 
-This NSX ALB Cloud Migrator is currently in version 1.1 and the capabilities & limitations are available in the release notes.
+This NSX ALB Virtual Service Migrator is currently in version 1.2 and the capabilities & limitations are available in the release notes.
 # Overview
-This NSX ALB Cloud Migrator supports the below migration scenarios for Virtual Services and dependencies within the same NSX ALB Tenant:
+This NSX ALB Virtual Service Migrator supports the below migration scenarios for Virtual Services and dependencies within the same NSX ALB Tenant:
 
 **Migration across Cloud Accounts**
 1. Migration from vCenter Cloud Account to No-Orchestrator Cloud
@@ -34,7 +34,7 @@ This NSX ALB Cloud Migrator supports the below migration scenarios for Virtual S
 3. Migration from one Service Engine Group to another in NSX-T VLAN Cloud accounts
 4. Migration from one Service Engine Group to another in NSX-T Overlay Cloud accounts
 
-**Note:** This NSX ALB Cloud Migrator supports only migration within the same NSX ALB Tenant. Cross Tenant migration is currently not supported.
+**Note:** This NSX ALB Virtual Service Migrator supports only migration within the same NSX ALB Tenant. Cross Tenant migration is currently not supported.
 
 # Instructions
 1. Make sure that the target cloud account to which the Virtual Services need to be migrated is configured. This includes the cloud connector configuration, VRF Contexts, networks & routing configuration and service engine confguration under the Service Engine Group.
@@ -48,15 +48,15 @@ This NSX ALB Cloud Migrator supports the below migration scenarios for Virtual S
      - urllib3 -> *python3 -m pip install urllib3* 
      - tabulate -> *python3 -m pip install tabulate*
      - pandas -> *python3 -m pip install pandas*
-8. Clone the repository and navigate to NsxAlbCloudMigrator/V1.1/ -> *git clone https://github.com/harikrishnant/NsxAlbCloudMigrator.git && cd NsxAlbCloudMigrator/V1.1/*
+8. Clone the repository and navigate to NsxAlbCloudMigrator/V1.2/ -> *git clone https://github.com/harikrishnant/NsxAlbCloudMigrator.git && cd NsxAlbCloudMigrator/V1.2/*
 9. The migration workflow will create a tracking directory (NsxAlbCloudMigrator/V1.1/Tracker/) which has the tracking information for each job. DO NOT DELETE this directory, as this is required for cleanup and remove_prefix jobs.
-10. Logs for each job is save in NsxAlbCloudMigrator/V1.1/logs/
+10. Logs for each job is save in NsxAlbCloudMigrator/V1.2/logs/
 
 **Migration mode**
 
 9. Run ./main.py with the "migrate" subcommand. -> *./main.py migrate --help* 
 
-This will launch NSX ALB Cloud Migrator help menu for the migrate mode. Follow instructions on the screen.
+This will launch NSX ALB Virtual Service Migrator help menu for the migrate mode. Follow instructions on the screen.
 
 Eg: *./main.py migrate -i <NSX_ALB_Controller_IP/FQDN> -a <API_Version> -u <NSX_ALB_USER> -t <NSX_ALB_TENANT> -c <Target_Cloud_Account> -r <Target_VRF_Context> -s <Target_SEG> -P <Prefix/Run-ID>*
  
@@ -64,7 +64,7 @@ Eg: *./main.py migrate -i <NSX_ALB_Controller_IP/FQDN> -a <API_Version> -u <NSX_
 
 10. Run ./main.py with the "remove_prefix" subcommand. -> *./main.py remove_prefix --help* 
  
-This will launch NSX ALB Cloud Migrator help menu for the remove_prefix mode. Follow instructions on the screen.
+This will launch NSX ALB Virtual Service Migrator help menu for the remove_prefix mode. Follow instructions on the screen.
 
 Eg: *./main.py remove_prefix -i <NSX_ALB_Controller_IP/FQDN> -u <NSX_ALB_USER> -p <NSX_ALB_PASSWORD> -r <Prefix/Run-ID>*
 
@@ -72,7 +72,7 @@ Eg: *./main.py remove_prefix -i <NSX_ALB_Controller_IP/FQDN> -u <NSX_ALB_USER> -
 
 10. Run ./main.py with the "cleanup" subcommand. -> *./main.py cleanup --help* 
  
-This will launch NSX ALB Cloud Migrator help menu for the cleanup mode. Follow instructions on the screen.
+This will launch NSX ALB Virtual Service Migrator help menu for the cleanup mode. Follow instructions on the screen.
 
 Eg: *./main.py cleanup -i <NSX_ALB_Controller_IP/FQDN> -u <NSX_ALB_USER> -p <NSX_ALB_PASSWORD> -r <Prefix/Run-ID>*
 
@@ -81,6 +81,6 @@ Eg: *./main.py cleanup -i <NSX_ALB_Controller_IP/FQDN> -u <NSX_ALB_USER> -p <NSX
 ![VxPlanet.com](https://serveritpro.files.wordpress.com/2022/03/flowchart.jpg)
 
 # Contact
-Please contact me at https://vxplanet.com for improvising the code, feature enhancements and bugs. Alternatively you can also use Issue Tracker to report any bugs or questions regarding the NSX ALB Cloud Migrator tool. 
+Please contact me at https://vxplanet.com for improvising the code, feature enhancements and bugs. Alternatively you can also use Issue Tracker to report any bugs or questions regarding the NSX ALB Virtual Service Migrator tool. 
 
 ![VxPlanet.com](https://serveritpro.files.wordpress.com/2021/09/vxplanet_correct.png)
