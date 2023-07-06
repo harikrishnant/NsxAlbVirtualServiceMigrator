@@ -53,12 +53,12 @@ This NSX ALB Virtual Service Migrator supports the below migration scenarios for
     - **Migration mode** -> This mode will perform migration of virtual services to same or different NSX ALB Cloud account.
     - **Remove Prefix mode** -> This mode will perform automated removal of prefixes appended to the migrated objects. This needs to be done post cutover of virtual services.
     - **Cleanup mode** -> This mode will perform cleanup of migrated objects incase the tool encounters an error or if post migration validation fails. This needs to be done before the Remove Prefix mode.
-11. The migration workflow will create a tracking directory (NsxAlbVirtualServiceMigrator/V1.2/Tracker/) which has the tracking information for each job. DO NOT DELETE this directory, as this is required for cleanup and remove_prefix jobs.
-12. Logs for each job is save in NsxAlbVirtualServiceMigrator/V1.2/logs/
+10. The migration workflow will create a tracking directory (NsxAlbVirtualServiceMigrator/V1.2/Tracker/) which has the tracking information for each job. DO NOT DELETE this directory, as this is required for cleanup and remove_prefix jobs.
+11. Logs for each job is save in NsxAlbVirtualServiceMigrator/V1.2/logs/
 
 **Migration mode**
 
-13. Run ./main.py with the "migrate" subcommand. -> *python3 main.py migrate --help* 
+12. Run ./main.py with the "migrate" subcommand. -> *python3 main.py migrate --help* 
 
 This will launch NSX ALB Virtual Service Migrator help menu for the migrate mode. Follow instructions on the screen.
 
@@ -80,7 +80,7 @@ where
  
 **Remove prefix mode**
 
-14. Run ./main.py with the "remove_prefix" subcommand. -> *python3 main.py remove_prefix --help* 
+13. Run ./main.py with the "remove_prefix" subcommand. -> *python3 main.py remove_prefix --help* 
  
 This will launch NSX ALB Virtual Service Migrator help menu for the remove_prefix mode. Follow instructions on the screen.
 
@@ -90,7 +90,7 @@ This will automate the removal of prefixes attached to the migrated objects. Thi
 
 **Cleanup mode**
 
-15. Run ./main.py with the "cleanup" subcommand. -> *python3 main.py cleanup --help* 
+14. Run ./main.py with the "cleanup" subcommand. -> *python3 main.py cleanup --help* 
  
 This will launch NSX ALB Virtual Service Migrator help menu for the cleanup mode. Follow instructions on the screen.
 
