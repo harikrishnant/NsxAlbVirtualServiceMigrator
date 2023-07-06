@@ -13,6 +13,8 @@ from tabulate import tabulate
 from nsx_alb_login import NsxAlbLogin
 from nsx_alb_tenants import NsxAlbTenant
 from nsx_alb_clouds import NsxAlbCloud
+from nsx_alb_dnsprofiles import NsxAlbDnsProfile
+from nsx_alb_ipamprofiles import NsxAlbIpamProfile
 from nsx_alb_vrfcontexts import NsxAlbVrfContext
 from nsx_alb_segroups import NsxAlbSeGroup
 from nsx_alb_pools import NsxAlbPool
@@ -30,8 +32,8 @@ def main():
     print(logo)
 
     #Block for Argparse and subcommands for migrate and cleanup
-    parser = argparse.ArgumentParser(description="NSX ALB Cloud Migrator Flags", epilog="Author : Harikrishnan T (@hari5611). Visit vxplanet.com for more information", add_help=True)
-    parser.add_argument("-v", "--version", action="version", version="NSX ALB Cloud Migrator 1.0.0")
+    parser = argparse.ArgumentParser(description="NSX ALB Virtual Service Migrator v1.2 Flags", epilog="Author : Harikrishnan T (@hari5611). Visit vxplanet.com for more information", add_help=True)
+    parser.add_argument("-v", "--version", action="version", version="NSX ALB Virtual Service Migrator version 1.2")
     #parser.add_argument("-U", "--username", action="store", nargs="?", const="admin", type=str, metavar="USERNAME", dest="username", required=False, help="User with system admin privileges to NSX ALB. If not specified, local %(const)s user will be used.")
     subparsers = parser.add_subparsers(title='Valid Subcommands', help="Available Subcommands")
     parser_migrate = subparsers.add_parser("migrate", help='Migrate Virtual Services across Cloud accounts (migrate -h for help)')
@@ -45,6 +47,11 @@ def main():
     parser_migrate.add_argument("-c", "--target_cloud", action="store", type=str, metavar="TARGET_CLOUD", dest="target_cloud_name", required=True, help="NSX ALB target Cloud account for migration")
     parser_migrate.add_argument("-r", "--target_vrf", action="store", type=str, metavar="TARGET_VRF", dest="target_vrf_name", required=True, help="NSX ALB target VRF Context for migration")
     parser_migrate.add_argument("-s", "--target_seg", action="store", type=str, metavar="TARGET_SERVICE_ENGINE_GROUP", dest="target_seg_name", required=True, help="NSX ALB target Service Engine Group for migration")
+    parser_migrate.add_argument("-d", "--target_dns_domain", action="store", type=str, metavar="TARGET_APPLICATION_DNS_DOMAINS", dest="target_dns_domain", required=False, help="NSX ALB target DNS Application Domains")
+    
+    parser_migrate.add_argument("-n", "--target_ipam_network", action="store", type=str, metavar="TARGET_IPAM_NETWORK_NAME", dest="target_ipam_network", required=False, help="NSX ALB target IPAM Network name")
+    parser_migrate.add_argument("-S", "--target_ipam_subnet", action="store", type=str, metavar="TARGET IPAM SUBNET", dest="target_ipam_subnet", required=False, help="NSX ALB target IPAM subnet (x.x.x.x/x)")
+    
     parser_migrate.add_argument("-P", "--prefix", action="store", type=str, metavar="OBJECT_PREFIX", dest="prefix", required=True, help="Prefix for objets migrated by NSX ALB")
     parser_migrate.set_defaults(which="migrate")
     parser_cleanup.add_argument("-i", "--controller_ip", action="store", type=str, metavar="CONTROLLER_IP/FQDN", dest="controller_ip", required=True, help="NSX ALB Controller IP or FQDN")
@@ -60,14 +67,21 @@ def main():
     args = parser.parse_args() #Creates a Namespace Object. The parameters are attributes of this object
 
     #print(args.which)
+    #print(args.target_dns_domain.split(","))
     # print(sys.argv)
     #print(vars(args)) # will convert object to a dictionary
+    #print(args.__dict__)
     #if not hasattr(args, "controller_ip"):
 
     # Checking if subcommands are called with the main script
     if not hasattr(args, "which"):
         print(tabulate([["No Operation requested", "Select from one of the subcommands below:"]], headers=["Error", "Description"], showindex=True, tablefmt="fancy_grid"))
         parser.parse_args(["-h"])
+
+    # #Checking dependency parameters for IPAM
+    # if (getattr(args, "target_ipam_network") is not None and getattr(args,"target_ipam_subnet") is None) or (getattr(args,"target_ipam_network") is None and getattr(args,"target_ipam_subnet") is not None):
+    #     print(tabulate([["IPAM Parameter dependency error", "Both -n and -S flags are required for IPAM"]], headers=["Error", "Description"], showindex=True, tablefmt="fancy_grid"))
+    #     parser.parse_args(["migrate", "-h", "migrate -h"])
 
     #Custom Print function   
     def print_func(item):
@@ -119,6 +133,10 @@ def main():
                 sys.exit()
 
     if args.which == "migrate":
+        #Checking dependency parameters for IPAM
+        if (getattr(args, "target_ipam_network") is not None and getattr(args,"target_ipam_subnet") is None) or (getattr(args,"target_ipam_network") is None and getattr(args,"target_ipam_subnet") is not None):
+            print(tabulate([["IPAM Parameter dependency error", "Both -n and -S flags are required for IPAM"]], headers=["Error", "Description"], showindex=True, tablefmt="fancy_grid"))
+            parser.parse_args(["migrate", "-h", "migrate -h"])
         headers = {
                     "Content-Type": "application/json",
                     "Referer": URL,
@@ -215,17 +233,36 @@ def main():
         print(f"\nRemove Prefix for Run ID '{args.prefix}' has been completed.", f"Review the logs at {'./Tracker' + '/obj_prefix_removal_status_' + args.prefix + '.csv'} and manually rename any failed items")       
         print(titles.thanks)
         sys.exit() 
-      
+
+    #Scan for DNS Provider Profiles
+    dnsproviderprofile = NsxAlbDnsProfile(URL, headers, args.prefix)
+    dnsproviderprofile.get_dnsprofile()
+
+    #Scan for IPAM Provider Profiles
+    ipamproviderprofile = NsxAlbIpamProfile(URL, headers, args.prefix)
+    ipamproviderprofile.get_network()
+    ipamproviderprofile.get_ipamprofile()
+
     #List all NSX ALB cloud accounts and select the target cloud for migration
     print_func(titles.cloud)
     cloud = NsxAlbCloud(URL, headers, args.prefix)
-    cloud.set_cloud(args.target_cloud_name)
+    cloud.set_cloud(args.target_cloud_name, dnsproviderprofile.dict_dnsprofile_url_name, ipamproviderprofile.dict_ipamprofile_url_name)
 
     #List all VRFs under the selected NSX ALB cloud account and select the target VRF for migration
     print_func(titles.vrfcontext)
     vrfcontext = NsxAlbVrfContext(URL, headers, cloud.target_cloud_url, cloud.target_cloud_name, args.prefix)
     vrfcontext.set_vrfcontext(args.target_vrf_name)
 
+    #Scan and validate supplied DNS domain list:
+    if getattr(args, "target_dns_domain") is not None:
+        print_func(titles.dnsprofile)
+        dnsproviderprofile.scan_dnsprofile(cloud.target_cloud_dnsprofile_url, getattr(args, "target_dns_domain", "").split(","))
+
+    #Scan and validate supplied IPAM networks:
+    if getattr(args, "target_ipam_network") is not None and getattr(args, "target_ipam_subnet") is not None:
+        print_func(titles.ipamprofile)
+        ipamproviderprofile.scan_ipamprofile(cloud.target_cloud_ipamprofile_url, getattr(args, "target_ipam_network"), getattr(args, "target_ipam_subnet"), vrfcontext.list_vrfcontexts, args.target_vrf_name)
+    
     #List all Service Engine Groups (SEG) under the selected NSX ALB cloud account and select the target SEG for migration
     print_func(titles.serviceenginegroup)
     segroup = NsxAlbSeGroup(URL, headers, cloud.target_cloud_url, cloud.target_cloud_name, args.prefix)
@@ -321,10 +358,13 @@ def main():
     vsvip.set_vsvip(virtualservice.dict_selectedvs_originalvsvipname)
     if len(vsvip.dict_selectedvsvip_url_name) != 0:
         print_func(titles.vsvip_migrate)
-        vsvip.migrate_vsvip(cloud.target_cloud_url, vrfcontext.target_vrfcontext_url, vrfcontext.target_vrfcontext_tier1path, args.prefix, migration_tracker.tracker_csv)
+        target_dns_domain = getattr(args, "target_dns_domain").split(",") if getattr(args, "target_dns_domain") is not None else []
+        target_ipam_network = getattr(args, "target_ipam_network") if getattr(args, "target_ipam_network") is not None else ""
+        target_ipam_subnet =  getattr(args, "target_ipam_subnet") if getattr(args, "target_ipam_subnet") is not None else ""
+        vsvip.migrate_vsvip(cloud.target_cloud_url, vrfcontext.target_vrfcontext_url, vrfcontext.target_vrfcontext_tier1path, args.prefix, migration_tracker.tracker_csv, target_dns_domain, target_ipam_network, target_ipam_subnet, ipamproviderprofile.create_ipam_block(target_ipam_network, target_ipam_subnet))
     else:
         vsvip.dict_originalvsvipurl_migratedvsvipurl = {}
-
+    
     #Migrate Virtual Services to the target cloud account
     print_func(titles.vs_migrate)
     virtualservice.migrate_virtualservice(pool_vs.dict_originalpoolurl_migratedpoolurl, poolgroup_vs.dict_originalpoolgroupurl_migratedpoolgroupurl, httppolicyset.dict_vs_httppolicysetmigratedurl, vsvip.dict_originalvsvipurl_migratedvsvipurl, cloud.target_cloud_url, vrfcontext.target_vrfcontext_url, segroup.target_segroup_url, args.prefix, migration_tracker.tracker_csv)
