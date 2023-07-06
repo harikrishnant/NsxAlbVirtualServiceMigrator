@@ -40,6 +40,7 @@ class NsxAlbVsVip:
         '''Class method to get the original VS VIP ref and name in required dict format for migration'''
         self.get_vsvip() #get_vsvip method is a pre-requisite for calling set_vsvip method
         self.dict_selectedvsvip_url_name = {}
+        self._dict_selectedvs_originalvsvipname = dict_selectedvs_originalvsvipname
         if len(dict_selectedvs_originalvsvipname) != 0:
             for selectedvs, selectedvs_vsvipname in list(dict_selectedvs_originalvsvipname.items()):
                 for vsvip_url, vsvip_name in list(self.dict_vsvip_url_name.items()):
@@ -60,7 +61,43 @@ class NsxAlbVsVip:
             sys.exit()
         return response.json()
     
-    def migrate_vsvip(self, target_cloud_url, target_vrfcontext_url, target_vrfcontext_tier1path, prefix_tag, tracker_csv):
+    def create_vip_dns(self, dns_domain, vsvip_name):
+        dns_updates = []
+        dns_host = ""
+        for selectedvs,originalvip in self._dict_selectedvs_originalvsvipname.items():
+            if originalvip == vsvip_name:
+                dns_host = selectedvs
+        for each_domain in dns_domain:
+            dns_updates.append({
+                "algorithm": "DNS_RECORD_RESPONSE_CONSISTENT_HASH",
+                "fqdn": dns_host + "." + each_domain,
+                "ttl": 30,
+                "type": "DNS_RECORD_A" 
+            })
+        return {
+            "dns_info": dns_updates
+        }
+
+    def update_vip_dns(self, dns_domain, vsvip_name, vip_dns_info):
+        dns_updates = []
+        dns_host = [each_dns_info.get("fqdn", "") for each_dns_info in vip_dns_info for each_domain in dns_domain if each_domain in each_dns_info.get("fqdn")]
+        
+        for selectedvs,originalvip in self._dict_selectedvs_originalvsvipname.items():
+            if originalvip == vsvip_name:
+                for each_domain in dns_domain:
+                    if selectedvs + "." + each_domain not in dns_host:
+                        dns_host.append(selectedvs + "." + each_domain)
+
+        for each_fqdn in dns_host:
+            dns_updates.append({
+                "algorithm": "DNS_RECORD_RESPONSE_CONSISTENT_HASH",
+                "fqdn": each_fqdn,
+                "ttl": 30,
+                "type": "DNS_RECORD_A" 
+            })
+        return dns_updates
+
+    def migrate_vsvip(self, target_cloud_url, target_vrfcontext_url, target_vrfcontext_tier1path, prefix_tag, tracker_csv, dns_domain, target_ipam_network, target_ipam_subnet, target_ipam_block):
         ''' Class Method to migrate VS VIPs to target cloud account '''
         self._dict_vsvipmigrated_name_url = {}
         self.dict_originalvsvipurl_migratedvsvipurl = {}
@@ -68,10 +105,31 @@ class NsxAlbVsVip:
             for vsvip in self._list_vsvips:
                 if selectedvsvip_name == vsvip["name"]:
                     del vsvip["uuid"]
-                    del vsvip["url"]
                     del vsvip["_last_modified"]
                     if "tier1_lr" in vsvip:
                         del vsvip["tier1_lr"]
+                    #DNS domain updates
+                    if "dns_info" in vsvip and not dns_domain: #Condition 1
+                        vsvip.pop("dns_info")
+                    elif "dns_info" not in vsvip and dns_domain: #Condition 2
+                        vsvip.update(self.create_vip_dns(dns_domain, vsvip.get("name")))
+                    elif "dns_info" in vsvip and dns_domain: #Condition 3
+                        vsvip["dns_info"] = self.update_vip_dns(dns_domain, vsvip.get("name"), vsvip.get("dns_info"))
+                    #IPAM Updates
+                    if not target_ipam_network and not target_ipam_subnet:
+                        vsvip.get("vip", [])[0]["auto_allocate_ip"] = "false"
+                        if "ipam_network_subnet" in vsvip.get("vip",[])[0]:
+                            vsvip.get("vip",[])[0].pop("ipam_network_subnet")
+                    elif target_ipam_network and target_ipam_subnet:
+                        vsvip.get("vip", [])[0]["auto_allocate_ip"] = "true"
+                        if "ipam_network_subnet" in vsvip.get("vip",[])[0]:
+                            vsvip.get("vip",[])[0].pop("ipam_network_subnet")
+                        if "ip_address" in vsvip.get("vip",[])[0]:
+                            vsvip.get("vip",[])[0].pop("ip_address")
+                        vsvip.get("vip",[])[0].update({
+                            "ipam_network_subnet" : target_ipam_block
+                        })
+                    del vsvip["url"]
                     vsvip["cloud_ref"] = target_cloud_url
                     vsvip["vrf_context_ref"] = target_vrfcontext_url
                     if target_vrfcontext_tier1path != "":

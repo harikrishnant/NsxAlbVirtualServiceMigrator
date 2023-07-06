@@ -19,7 +19,7 @@ class NsxAlbVrfContext:
 
     def get_vrfcontext(self): 
         ''' Class Method to get the list of all VRF Contexts under the selected Cloud Account and to handle API Pagination '''
-        self._list_vrfcontexts = []
+        self.list_vrfcontexts = []
         self._dict_vrfcontext_url_name = {}
         new_results = True
         page = 1
@@ -31,7 +31,7 @@ class NsxAlbVrfContext:
                 if vrfcontext != []:
                     if (vrfcontext["cloud_ref"] == self._target_cloud_url) and (vrfcontext["name"] != "management"):
                         self._dict_vrfcontext_url_name[vrfcontext["url"]] = vrfcontext["name"]
-                        self._list_vrfcontexts.append(vrfcontext)
+                        self.list_vrfcontexts.append(vrfcontext)
             page += 1
         if len(self._dict_vrfcontext_url_name) != 0:
             self.print_func(f"\nFound {len(self._dict_vrfcontext_url_name)} VRF Contexts under the target cloud account '{self._target_cloud_name}' for tenant - {self._headers['X-Avi-Tenant']}")
@@ -49,7 +49,7 @@ class NsxAlbVrfContext:
         self.target_vrfcontext_url = "" # Use this VRF Context to migrate to #
         self.target_vrfcontext_tier1path = ""
         if self._target_vrfcontext_name in list(self._dict_vrfcontext_url_name.values()):    
-            for vrfcontext in self._list_vrfcontexts:
+            for vrfcontext in self.list_vrfcontexts:
                 if self._target_vrfcontext_name == vrfcontext["name"]:
                     self.target_vrfcontext_url = vrfcontext["url"]
                     if "attrs" in list(vrfcontext.keys()): #For supporting NSX-T T1 Gateways

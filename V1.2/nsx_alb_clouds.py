@@ -39,18 +39,32 @@ class NsxAlbCloud:
             self.print_func(tabulate(list(map(list, response.json().items())), headers=["Error", "Details"], showindex=True, tablefmt="fancy_grid"))
             sys.exit()
  
-    def set_cloud(self, target_cloud_name):
+    def set_cloud(self, target_cloud_name, dict_dnsproviderprofile_url_name, dict_ipamproviderprofile_url_name):
         ''' Class Method to set the destination cloud account to migrate virtual services to '''
         self.get_cloud() #get_cloud() method is a pre-requisite to run the set_cloud() method
         self.target_cloud_name = target_cloud_name
         self.target_cloud_url = "" # Use this Cloud URL to migrate to #
         if self.target_cloud_name in list(self.dict_cloud_url_name.values()):    
-            for url,name in self.dict_cloud_url_name.items():
-                if name == self.target_cloud_name:
-                    self.target_cloud_url = url
+            for cloud in self._list_clouds:
+                if cloud.get("name") == self.target_cloud_name:
+                    self.target_cloud_url = cloud.get("url")
+                    self.target_cloud_dnsprofile_url = cloud.get("dns_provider_ref", "")
+                    self.target_cloud_ipamprofile_url = cloud.get("ipam_provider_ref", "")
+                    if self.target_cloud_dnsprofile_url:
+                        for dnsprofile_url,dnsprofile_name in dict_dnsproviderprofile_url_name.items():
+                            if dnsprofile_url == self.target_cloud_dnsprofile_url:
+                                self.target_cloud_dnsprofile_name = dnsprofile_name
+                    else:
+                        self.target_cloud_dnsprofile_name = "NONE"
+                    if self.target_cloud_ipamprofile_url:
+                        for ipamprofile_url,ipamprofile_name in dict_ipamproviderprofile_url_name.items():
+                            if ipamprofile_url == self.target_cloud_ipamprofile_url:
+                                self.target_cloud_ipamprofile_name = ipamprofile_name
+                    else:
+                        self.target_cloud_ipamprofile_name = "NONE"
         else:
             self.print_func("\n")
             self.print_func(tabulate([[f"Cloud Account '{self.target_cloud_name}' not found", "Please select the correct cloud account from the table above"]], ["Error", "Details"], showindex=True, tablefmt="fancy_grid"))
             sys.exit()
         self.print_func(f"\nYou selected '{self.target_cloud_name}' Cloud Account\n")
-        self.print_func(tabulate([[self.target_cloud_name, self.target_cloud_url]], ["Name", "Cloud_Ref"], showindex=True, tablefmt="fancy_grid"))
+        self.print_func(tabulate([[self.target_cloud_name, self.target_cloud_url, self.target_cloud_dnsprofile_name, self.target_cloud_ipamprofile_name]], ["Name", "Cloud_Ref", "DNS Profile", "IPAM_Profile"], showindex=True, tablefmt="fancy_grid"))
