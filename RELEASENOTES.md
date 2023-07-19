@@ -1,3 +1,53 @@
+# NSX ALB Virtual Service Migrator 1.3 Release Notes
+This release notes cover the following topics:
+- Document Revision History
+- Supported NSX ALB Versions
+- What's New
+- Known Limitations
+
+**Document Revision History**
+
+First Edition - March 03, 2022
+
+Second Edition - July 24, 2022
+
+Third Edition - July 6, 2023
+
+Fourth Edition - July 19, 2023
+
+**Supported NSX ALB Versions**
+
+NSX ALB API Versions 18.1.2 till 22.1.3
+
+**Whats's New**
+- Added support for migration of virtual services which are part of Virtual Service Hosting (Parent-Child relationships)
+     -  An new migration flag "-q" / "--virtual_hosted_vs" added to the migration mode to handle Parent and Child virtual services migration
+     -  Parent-Child virtual services part of TLS-SNI hosting can be now migrated to any supported cloud account.
+     -  Parent-Child virtual services part of EVH (Enhanced Virtual Hosting) can be now migrated to any supported cloud account.
+- The "remove_prefix" mode in the migration tool is updated to support prefix removal of migrated VS'es which are part of Virtual Service Hosting (Parent-Child relationships)
+- Supports migration of virtual services with VIP sharing
+
+**Issues fixed**
+- TULSI-004 : Virtual services migration errors in version 1.2 happening while encountering TLS-SNI or EVH hosted VS'es are now fixed.
+
+**Known Issues**
+- TULSI-005 : Cleanup job of TLS-SNI / EVH hosted virtual services will log failure errors for Parent Virtual services.
+   - Workaround : Run the cleanup job twice
+
+
+**Known Limitations**
+
+The below NSX ALB features are not yet tested with NSX ALB Virtual Service Migrator and hence migration of below features may or may not work as expected.
+- NSX ALB Controllers with SAML / LDAP configured. Currently only local accounts are supported
+- Any datascripts with mention of pools / pool groups need to be manually updated post migration
+- GSLB Applications are not updated with migrated virtual services information
+- For NSX-T VLAN backed clouds, the placement networks for each virtual service need to be manually added. This is a NSX ALB Cloud limitation
+- Migration from NSX-T Overlay Cloud to vCenter Cloud succeeds but requires additional manual intervention for VIP connectivity.
+- Doesn't support cross-tenant migration
+
+![VxPlanet.com](https://serveritpro.files.wordpress.com/2021/09/vxplanet_correct.png)
+
+
 # NSX ALB Virtual Service Migrator 1.2 Release Notes
 This release notes cover the following topics:
 - Document Revision History
