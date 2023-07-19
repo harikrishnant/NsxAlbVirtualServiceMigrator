@@ -47,12 +47,11 @@ def main():
     parser_migrate.add_argument("-c", "--target_cloud", action="store", type=str, metavar="TARGET_CLOUD", dest="target_cloud_name", required=True, help="NSX ALB target Cloud account for migration")
     parser_migrate.add_argument("-r", "--target_vrf", action="store", type=str, metavar="TARGET_VRF", dest="target_vrf_name", required=True, help="NSX ALB target VRF Context for migration")
     parser_migrate.add_argument("-s", "--target_seg", action="store", type=str, metavar="TARGET_SERVICE_ENGINE_GROUP", dest="target_seg_name", required=True, help="NSX ALB target Service Engine Group for migration")
-    parser_migrate.add_argument("-d", "--target_dns_domain", action="store", type=str, metavar="TARGET_APPLICATION_DNS_DOMAINS", dest="target_dns_domain", required=False, help="NSX ALB target DNS Application Domains")
-    
+    parser_migrate.add_argument("-d", "--target_dns_domain", action="store", type=str, metavar="TARGET_APPLICATION_DNS_DOMAINS", dest="target_dns_domain", required=False, help="NSX ALB target DNS Application Domains")    
     parser_migrate.add_argument("-n", "--target_ipam_network", action="store", type=str, metavar="TARGET_IPAM_NETWORK_NAME", dest="target_ipam_network", required=False, help="NSX ALB target IPAM Network name")
-    parser_migrate.add_argument("-S", "--target_ipam_subnet", action="store", type=str, metavar="TARGET IPAM SUBNET", dest="target_ipam_subnet", required=False, help="NSX ALB target IPAM subnet (x.x.x.x/x)")
-    
+    parser_migrate.add_argument("-S", "--target_ipam_subnet", action="store", type=str, metavar="TARGET IPAM SUBNET", dest="target_ipam_subnet", required=False, help="NSX ALB target IPAM subnet (x.x.x.x/x)")    
     parser_migrate.add_argument("-P", "--prefix", action="store", type=str, metavar="OBJECT_PREFIX", dest="prefix", required=True, help="Prefix for objets migrated by NSX ALB")
+    parser_migrate.add_argument("-q", "--virtual_hosted_vs", action="store", type=str, choices=["sni_evh", ], metavar="MIGRATE_PARENT_CHILD_VS", dest="virtual_hosted_vs", required=False, help="Migrate Parent-Child Virtual Services. Supported value is 'sni_evh'")
     parser_migrate.set_defaults(which="migrate")
     parser_cleanup.add_argument("-i", "--controller_ip", action="store", type=str, metavar="CONTROLLER_IP/FQDN", dest="controller_ip", required=True, help="NSX ALB Controller IP or FQDN")
     parser_cleanup.add_argument("-u", "--username", action="store", type=str, metavar="USERNAME", dest="username", required=True, help="User with system admin privileges to NSX ALB")
@@ -63,6 +62,7 @@ def main():
     parser_remove_prefix.add_argument("-u", "--username", action="store", type=str, metavar="USERNAME", dest="username", required=True, help="User with system admin privileges to NSX ALB")
     parser_remove_prefix.add_argument("-p", "--password", action="store", type=str, metavar="PASSWORD", dest="password", required=False, help="User Password")
     parser_remove_prefix.add_argument("-r", "--run_id", action="store", type=str, metavar="RUN_ID", dest="prefix", required=True, help="Run ID (Prefix name) of the run")
+    parser_remove_prefix.add_argument("-q", "--virtual_hosted_vs", action="store", type=str, choices=["sni_evh", ], metavar="REMOVE_PREFIX_FOR_PARENT_CHILD_VS", dest="virtual_hosted_vs", required=False, help="Remove Prefix for Parent-Child Virtual Services. Supported value is 'sni_evh'")
     parser_remove_prefix.set_defaults(which="remove_prefix")
     args = parser.parse_args() #Creates a Namespace Object. The parameters are attributes of this object
 
@@ -228,7 +228,7 @@ def main():
         rm_prefix_httppolicyset.remove_httppolicyset_prefix("./Tracker", headers)
         rm_prefix_vip = NsxAlbVsVip(URL, headers, args.prefix)
         rm_prefix_vip.remove_vsvip_prefix("./Tracker", headers)
-        rm_prefix_virtualservice = NsxAlbVirtualService(URL, headers, run_id=args.prefix)
+        rm_prefix_virtualservice = NsxAlbVirtualService(URL, headers, run_id=args.prefix, migrate_parent_child_vs=args.virtual_hosted_vs)
         rm_prefix_virtualservice.remove_virtualservice_prefix("./Tracker", headers) 
         print(f"\nRemove Prefix for Run ID '{args.prefix}' has been completed.", f"Review the logs at {'./Tracker' + '/obj_prefix_removal_status_' + args.prefix + '.csv'} and manually rename any failed items")       
         print(titles.thanks)
@@ -286,7 +286,7 @@ def main():
 
     #List the Virtual Services under the Tenant and select the Virtual Services for migration
     print_func(titles.vs_selector)
-    virtualservice = NsxAlbVirtualService(URL, headers, dict_cloud_url_name=cloud.dict_cloud_url_name, dict_pool_url_name=pool.dict_pool_url_name, dict_poolgroup_url_name=poolgroup.dict_poolgroup_url_name, dict_vsvip_url_name=vsvip.dict_vsvip_url_name, run_id=args.prefix)
+    virtualservice = NsxAlbVirtualService(URL, headers, dict_cloud_url_name=cloud.dict_cloud_url_name, dict_pool_url_name=pool.dict_pool_url_name, dict_poolgroup_url_name=poolgroup.dict_poolgroup_url_name, dict_vsvip_url_name=vsvip.dict_vsvip_url_name, run_id=args.prefix, migrate_parent_child_vs=args.virtual_hosted_vs)
     virtualservice.set_virtualservice()
 
     #Scan for HTTPPolicySets in the Tenant
@@ -367,8 +367,11 @@ def main():
     
     #Migrate Virtual Services to the target cloud account
     print_func(titles.vs_migrate)
-    virtualservice.migrate_virtualservice(pool_vs.dict_originalpoolurl_migratedpoolurl, poolgroup_vs.dict_originalpoolgroupurl_migratedpoolgroupurl, httppolicyset.dict_vs_httppolicysetmigratedurl, vsvip.dict_originalvsvipurl_migratedvsvipurl, cloud.target_cloud_url, vrfcontext.target_vrfcontext_url, segroup.target_segroup_url, args.prefix, migration_tracker.tracker_csv)
-   
+    if args.virtual_hosted_vs is None:
+        virtualservice.migrate_virtualservice(pool_vs.dict_originalpoolurl_migratedpoolurl, poolgroup_vs.dict_originalpoolgroupurl_migratedpoolgroupurl, httppolicyset.dict_vs_httppolicysetmigratedurl, vsvip.dict_originalvsvipurl_migratedvsvipurl, cloud.target_cloud_url, vrfcontext.target_vrfcontext_url, segroup.target_segroup_url, args.prefix, migration_tracker.tracker_csv)
+    elif args.virtual_hosted_vs is not None:
+        virtualservice.migrate_parent_child_virtualservice(pool_vs.dict_originalpoolurl_migratedpoolurl, poolgroup_vs.dict_originalpoolgroupurl_migratedpoolgroupurl, httppolicyset.dict_vs_httppolicysetmigratedurl, vsvip.dict_originalvsvipurl_migratedvsvipurl, cloud.target_cloud_url, vrfcontext.target_vrfcontext_url, segroup.target_segroup_url, args.prefix, migration_tracker.tracker_csv)
+    
     #Logout from NSX ALB Controller
     print_func(titles.logout)
     print_func("\nMigration is successful, now logging out from NSX ALB Controller...")
