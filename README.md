@@ -1,11 +1,13 @@
 # NSX ALB Virtual Service Migrator v1.3
-NSX ALB Virtual Service Migrator will migrate Virtual Services (and it's dependencies - pools, poolgroups, HTTPPolicySets and VSVIPs) across NSX ALB Cloud Accounts, VRF Contexts, Service Engine Groups and NSX-T T1 gateways. Currently the below NSX ALB cloud accounts are supported:
+NSX ALB Virtual Service Migrator will migrate Virtual Services (and it's dependencies - pools, poolgroups, HTTPPolicySets, VSVIPs and child virtual services, if in a Parent-Child relationship) across NSX ALB Cloud Accounts, VRF Contexts, Service Engine Groups and NSX-T T1 gateways. Currently the below NSX ALB cloud accounts are supported:
 - vCenter Cloud
 - NSX-T VLAN cloud
 - NSX-T Overlay cloud
+  - Including NSX ALB on Azure VMware Solution (AVS)
 - No-Orchestrator cloud
+  - Including NSX ALB on VMware Cloud on AWS (VMConAWS)
 
-This NSX ALB Virtual Service Migrator is currently in version 1.2 and the capabilities & limitations are available in the release notes.
+The latest release to NSX ALB Virtual Service Migrator (as of July 19, 2023)  is version 1.3 and the capabilities & limitations are available in the release notes.
 # Overview
 This NSX ALB Virtual Service Migrator supports the below migration scenarios for Virtual Services and dependencies within the same NSX ALB Tenant:
 
@@ -20,6 +22,7 @@ This NSX ALB Virtual Service Migrator supports the below migration scenarios for
 8. Migration from vCenter Cloud Account to NSX-T Overlay Cloud
 9. Migration from No-Orchestrator Cloud to NSX-T Overlay Cloud
 10. Migration from NSX-T VLAN Cloud Account to NSX-T Overlay Cloud
+11. Migration from one NSX-T clopud to another NSX-T cloud (onprem to AVS for example)
 
 **Migration across VRF Contexts (Routing Domains)**
 1. Migration from one VRF Context to another in vCenter Cloud accounts
@@ -48,13 +51,13 @@ This NSX ALB Virtual Service Migrator supports the below migration scenarios for
      - urllib3 -> *python3 -m pip install urllib3* 
      - tabulate -> *python3 -m pip install tabulate*
      - pandas -> *python3 -m pip install pandas*
-8. Clone the repository and navigate to NsxAlbVirtualServiceMigrator/V1.2/ -> *git clone https://github.com/harikrishnant/NsxAlbVirtualServiceMigrator.git && cd NsxAlbVirtualServiceMigrator/V1.2/*
+8. Clone the repository and navigate to NsxAlbVirtualServiceMigrator/V1.3/ -> *git clone https://github.com/harikrishnant/NsxAlbVirtualServiceMigrator.git && cd NsxAlbVirtualServiceMigrator/V1.3/*
 9. The migration tool has three modes:
     - **Migration mode** -> This mode will perform migration of virtual services to same or different NSX ALB Cloud account.
     - **Remove Prefix mode** -> This mode will perform automated removal of prefixes appended to the migrated objects. This needs to be done post cutover of virtual services.
     - **Cleanup mode** -> This mode will perform cleanup of migrated objects incase the tool encounters an error or if post migration validation fails. This needs to be done before the Remove Prefix mode.
-10. The migration workflow will create a tracking directory (NsxAlbVirtualServiceMigrator/V1.2/Tracker/) which has the tracking information for each job. DO NOT DELETE this directory, as this is required for cleanup and remove_prefix jobs.
-11. Logs for each job is save in NsxAlbVirtualServiceMigrator/V1.2/logs/
+10. The migration workflow will create a tracking directory (NsxAlbVirtualServiceMigrator/V1.3/Tracker/) which has the tracking information for each job. DO NOT DELETE this directory, as this is required for cleanup and remove_prefix jobs.
+11. Logs for each job is save in NsxAlbVirtualServiceMigrator/V1.3/logs/
 
 **Migration mode**
 
@@ -62,7 +65,7 @@ This NSX ALB Virtual Service Migrator supports the below migration scenarios for
 
 This will launch NSX ALB Virtual Service Migrator help menu for the migrate mode. Follow instructions on the screen.
 
-*python3 main.py migrate -i <CONTROLLER_IP/FQDN> -u <.USERNAME> -p <.PASSWORD> -a <API_VERSION> -t <NSX_ALB_TENANT> -c <TARGET_CLOUD> -r <TARGET_VRF_CONTEXT> -s <TARGET_SERVICE_ENGINE_GROUP> -d <TARGET_APPLICATION_DNS_DOMAINS> -n <TARGET_IPAM_NETWORK_NAME> -S <TARGET_IPAM_SUBNET> -P <OBJECT_PREFIX/RUN-ID>*
+*python3 main.py migrate -i <CONTROLLER_IP/FQDN> -u <.USERNAME> -p <.PASSWORD> -a <API_VERSION> -t <NSX_ALB_TENANT> -c <TARGET_CLOUD> -r <TARGET_VRF_CONTEXT> -s <TARGET_SERVICE_ENGINE_GROUP> -d <TARGET_APPLICATION_DNS_DOMAINS> -n <TARGET_IPAM_NETWORK_NAME> -S <TARGET_IPAM_SUBNET> -q <VIRTUAL_HOSTED_VS> -P <OBJECT_PREFIX/RUN-ID>*
 
 where
 - CONTROLLER_IP/FQDN -> This is the NSX ALB Controller cluster IP/FQDN [MANDATORY]
@@ -76,6 +79,7 @@ where
 - TARGET_APPLICATION_DNS_DOMAINS -> This is a comma separated list of DNS subdomains to create the application DNS records. These subdomains should be a avaialble in the DNS profile attached to the target cloud connector. [OPTIONAL]
 - TARGET_IPAM_NETWORK_NAME -> This is the name of the network used for VIP auto-allocation. This network should be available in the IPAM profile attached to the target cloud connector. [OPTIONAL]
 - TARGET_IPAM_SUBNET -> This is the subnet available on the network for VIP auto-allocation. This subnet should have IP pools defined for VIP allocation.[OPTIONAL]
+- VIRTUAL_HOSTED_VS -> This argument switches the migration mode to handle Parent-Child VS migration for TLS SNI hosting and Enhanced Virtual Hostiong (EVH). Use this argument only to migrate Parent-Child VS'es. To migrate "NORMAL" VS'es, do not provide this argument (mutually exclusive). Supported values to this argument are "sni_evh" [OPTIONAL]
 - OBJECT_PREFIX/RUN-ID -> This is the prefix that will be attached to the migrated objects. This prefix should be unique for each migration job as this will be used for job tracking and cleanup mode.[MANDATORY]
  
 **Remove prefix mode**
@@ -84,7 +88,14 @@ where
  
 This will launch NSX ALB Virtual Service Migrator help menu for the remove_prefix mode. Follow instructions on the screen.
 
-Eg: *python3 main.py remove_prefix -i <CONTROLLER_IP/FQDN> -u <.USERNAME> -p <.PASSWORD> -r <OBJECT_PREFIX/RUN-ID>*
+Eg: *python3 main.py remove_prefix -i <CONTROLLER_IP/FQDN> -u <.USERNAME> -p <.PASSWORD> -q <REMOVE_PREFIX_FOR_PARENT_CHILD_VS> -r <OBJECT_PREFIX/RUN-ID>*
+
+where
+- CONTROLLER_IP/FQDN -> This is the NSX ALB Controller cluster IP/FQDN [MANDATORY]
+- USERNAME -> This is the local "system-admin" user account to login to the NSX ALB Controller cluster. SAML authentication is currently not supported.[MANDATORY]
+- PASSWORD -> This is the password of the above user account to login to the NSX ALB Controller cluster.[MANDATORY]
+- REMOVE_PREFIX_FOR_PARENT_CHILD_VS -> If the remove_prefix job is run for a previously migrated Parent-Child VS'es (SNI / EVH), this argument needs to be supplied. This is not required for prefix removal of "NORMAL" VS'es. Supported values to this argument are "sni_evh". [OPTIONAL]
+- OBJECT_PREFIX/RUN-ID -> This is the run-ID that was used for the previous migration job. [MANDATORY]
 
 This will automate the removal of prefixes attached to the migrated objects. This needs to be done after the virtual service cutover.
 
