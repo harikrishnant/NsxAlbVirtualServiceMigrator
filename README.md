@@ -123,10 +123,10 @@ This will cleanup all the migrated objects if the tool encounters an error or if
 # Contact
 Please contact me at https://vxplanet.com for improvising the code, feature enhancements and bugs. Alternatively you can also use Issue Tracker to report any bugs or questions regarding the NSX ALB Virtual Service Migrator tool. 
 
-![VxPlanet.com](https://serveritpro.files.wordpress.com/2021/09/vxplanet_correct.png)
+[![VxPlanet](https://serveritpro.files.wordpress.com/2021/09/vxplanet_correct.png)](https://vxplanet.com)
 
 # Donate
 If you found this project useful, saved you time and money, and/or you'd like donating to strangers, then here is my BuyMeACoffee button.
 
-![https://buymeacoffee.com/op1hmo9](https://i0.wp.com/vxplanet.com/wp-content/uploads/2023/05/giphy-3.gif?resize=168%2C168&ssl=1)
-![https://buymeacoffee.com/op1hmo9](https://i0.wp.com/vxplanet.com/wp-content/uploads/2019/11/65.png?resize=371%2C102&ssl=1)
+[![BuyMeACoffee](https://i0.wp.com/vxplanet.com/wp-content/uploads/2023/05/giphy-3.gif?resize=168%2C168&ssl=1)](https://buymeacoffee.com/op1hmo9)
+[![BuyMeACoffee](https://i0.wp.com/vxplanet.com/wp-content/uploads/2019/11/65.png?resize=371%2C102&ssl=1)](https://buymeacoffee.com/op1hmo9)
